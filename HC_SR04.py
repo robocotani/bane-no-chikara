@@ -1,3 +1,11 @@
+# ====================================
+# HC_SR04.py
+# ------------------------------------
+# 超音波測距モジュール用ライブラリ
+# ------------------------------------
+# 2022/11/24
+# T19JM042 長谷季樹
+# ====================================
 
 import RPi.GPIO as GPIO
 import time
@@ -90,7 +98,7 @@ if __name__ == "__main__":
     try:
         while True:
             distance_mm = get_distance(TRIG_PIN, ECHO_PIN, num=10, temp=20)
-            print("\r" + str(distance_mm) + " [mm]", end="")
+            print("\r" + str(distance_mm) + " [mm]  ", end="")
             time.sleep(0.01)
 
     except KeyboardInterrupt:
