@@ -32,18 +32,12 @@ class club():
 
     def __init__(self, duty=60):
 
-        # GPIO.cleanup()
-
         self.duty = duty
 
         self.DC_motor = L298N.DC_motor(self.IN3_PIN, self.IN4_PIN, self.FREQ)
         
         self.servo = MG996R.MG996R(self.SIG_PIN)
         self.servo.update_angle(0)
-
-        # self.DC_motor.rotate("CW", 30)
-        # time.sleep(1)
-        # self.DC_motor.stop()
 
     def shot(self, target_shot_dis):
         target_pull_dis = target_shot_dis / 20
@@ -77,29 +71,20 @@ class club():
             if self.now_pull_dis == -1:
                 DC_motor.stop()
 
-            # print(self.now_pull_dis)
-
             if self.now_pull_dis <= target_pull_dis-self.pull_dis_target_range:
-                # print("if1")
                 self.sheer_up(duty)
             elif target_pull_dis+self.pull_dis_target_range <= self.now_pull_dis:
                 self.sheer_down(duty)
-                # print("if2")
             else:
-                # print("if3")
                 self.DC_motor.stop()
                 break
-            
-            # time.sleep(1)                
 
         return self.now_pull_dis
 
     def sheer_up(self, duty):
-        # print("up")
         self.DC_motor.rotate("CW", duty)
 
     def sheer_down(self, duty):
-        # print("down")
         self.DC_motor.rotate("CCW", duty)
 
     def sheer_stop(self):
@@ -114,16 +99,7 @@ if __name__ == "__main__":
     
     club_ = club()
 
-    # club_.DC_motor.rotate("CW", 30)
-    # time.sleep(1)
-    # club_.DC_motor.
-    # stop()
     club_.now_pull_dis = HC_SR04.get_distance(club_.TRIG_PIN, club_.ECHO_PIN, num=5, temp=20)
-
-    # club_.sheer_down(30)
-    # time.sleep(1)
-    # club_.DC_motor.stop()
-
 
     try:
         while True:
