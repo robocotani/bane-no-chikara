@@ -1,8 +1,8 @@
 import cv2
-import RPi.GPIO as GPIO
+import time
+
 import D435i
 import picamera
-import time
 import move
 # import club
 # import HC_SR04
@@ -75,7 +75,7 @@ try:
             cv2.destroyAllWindows()
             # club_.sheer_release()
             # club_.end()
-            GPIO.cleanup()
+            move_.end()
             realsense.end()
             break
 
@@ -313,5 +313,5 @@ except KeyboardInterrupt:
     cv2.destroyAllWindows()
     # club_.sheer_release()
     # club_.end()
-    GPIO.cleanup()
+    move_.end()
     pi_camera.end()
