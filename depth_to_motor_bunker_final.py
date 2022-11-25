@@ -3,41 +3,20 @@ os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 import numpy as np
 import cv2
 import RPi.GPIO as GPIO
-import pyrealsense2.pyrealsense2 as rs
+import D435i
 import time
 import M_ball
-import M_flag
 import M_bunker
 import move
 import club
 import HC_SR04
 
 
-#距離計測用関数
-def distance(center_x,center_y):
-    #ボールとの距離は角度を補正
-    #周囲の5点を取って平均
-    #かけ離れている点は除外
-    dist = []
 
-    for i in range(5):
-        for j in range(5):
-            dist1 = depth_frame.get_distance(center_x + i, center_y + j)
-            dist.append(float(format(dist1,'.4f')))
-    
-    #0.1m以下、3.5m以上の点は除外して平均
-    dist_new = [i for i in dist if 0.1 < i < 3.5] 
-
-    try:
-        #ゼロ除算の対策
-        dist_mean = sum(dist_new)/len(dist_new)
-    except ZeroDivisionError:
-        dist_mean = None
-
-    return dist_mean
 
 
 move_ = move.move()
+realsense = D435i.D435i()
 
 #------------------------
 
@@ -99,20 +78,7 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, size_h)
 
 
 
-# ストリーム(Color/Depth)の設定----------
-config = rs.config()
 
-config.enable_stream(rs.stream.color, size_w, size_h, rs.format.bgr8, 30)
-config.enable_stream(rs.stream.depth, size_w, size_h, rs.format.z16, 30)
-
-# ストリーミング開始
-pipeline = rs.pipeline()
-profile = pipeline.start(config)
-
-# Alignオブジェクト生成
-align_to = rs.stream.color
-align = rs.align(align_to)
-#---------------------------------------
 
 # club
 # club_ = club.club()
@@ -134,7 +100,7 @@ try:
             # club_.sheer_release()
             # club_.end()
             GPIO.cleanup()
-            pipeline.stop()
+            realsense.end()
             break
 
 #ボール検出、追尾------------------------------------
@@ -298,44 +264,35 @@ try:
 
             print("=== flag move ===")
 
-            frames_flag = pipeline.wait_for_frames()
-
-            #座標の補正
-            aligned_frames = align.process(frames_flag)
-            color_frame = aligned_frames.get_color_frame()
-            depth_frame = aligned_frames.get_depth_frame()
-            if not depth_frame or not color_frame:
-                continue
-
-            RGB_image = np.asanyarray(color_frame.get_data())
-            depth_image = np.asanyarray(depth_frame.get_data())
-
-            flag_x, center_flag_x, center_flag_y, flag_w, RGB_image = M_flag.flag_detect(RGB_image)
+            # リアルセンス処理
+            realsense.get_image()
+            RGB_image = realsense.RGB_image
+            realsense.detect_flag()
 
             # 表示
-            if flag_x != None:
+            if realsense.flag_x != None:
                 cv2.rectangle(RGB_image, (x2_f, 0), (x3_f, size_w), (0, 255, 0), 2)
                 cv2.imshow('RealSense', RGB_image)
             
-            print(flag_x)
+            print(realsense.flag_x)
 
-            if flag_x == None:
+            if realsense.flag_x == None:
                 #フラッグ未検出
                 move_.right_rotation(duty_ball_flag_None)
                 print("未検出")
             else:
-                if flag_x < x2_f:
+                if realsense.flag_x < x2_f:
                     move_.left_rotation(duty_slow)
                     print('left flag slow')
-                if x3_f < flag_x:
+                if x3_f < realsense.flag_x:
                     move_.right_rotation(duty_slow) 
                     print('right slow')
-                if x2_f <= flag_x and flag_x <= x3_f:
+                if x2_f <= realsense.flag_x and realsense.flag_x <= x3_f:
                 #停止
                     print('stop flag')
                     move_.stop()
 
-                    dist_depth = distance(center_flag_x, center_flag_y)
+                    dist_depth = realsense.distance(realsense.center_flag_x, realsense.center_flag_y)
                     if dist_depth == None:
                         #ゼロ除算に引っかかったらもう一回
                         continue
@@ -389,8 +346,7 @@ try:
             
               
 except KeyboardInterrupt:
-    # ストリーミング停止
-    pipeline.stop()
+    realsense.end()
     cv2.destroyAllWindows()
     # club_.sheer_release()
     # club_.end()
