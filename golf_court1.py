@@ -5,8 +5,8 @@ import cv2
 import RPi.GPIO as GPIO
 import pyrealsense2.pyrealsense2 as rs
 import time
-import M_ball
-import M_flag
+import ball
+import flag
 import club
 import HC_SR04
 
@@ -214,7 +214,7 @@ try:
 
             ret, frame_ball_1 = cap.read()
 
-            upper_left_1_x, upper_left_1_y, center_ball_1_x, center_ball_1_y, frame_ball_1 = M_ball.ball_detect(frame_ball_1)
+            upper_left_1_x, upper_left_1_y, center_ball_1_x, center_ball_1_y, frame_ball_1 = ball.ball_detect(frame_ball_1)
 
             cv2.rectangle(frame_ball_1, (x2, 0), (x3, size_h), (0, 255, 0), 2)
             cv2.rectangle(frame_ball_1, (x1, 0), (x4, size_h), (0, 255, 0), 2)
@@ -296,7 +296,7 @@ try:
             depth_image = np.asanyarray(depth_frame.get_data())
 
 
-            upper_left_depth_x, upper_left_depth_y, center_ball_depth_x, center_ball_depth_y, frame_depth = M_ball.ball_detect(RGB_image)
+            upper_left_depth_x, upper_left_depth_y, center_ball_depth_x, center_ball_depth_y, frame_depth = ball.ball_detect(RGB_image)
 
             # 表示
             if center_ball_depth_x != None:
@@ -312,7 +312,7 @@ try:
                     left_rotation_back(duty_middle)
                     print('left')
 
-                if x1 <= center_ball_depth_x_x and center_ball_depth_x < x2:
+                if x1 <= center_ball_depth_x and center_ball_depth_x < x2:
                     left_rotation_back(duty_middle)
                     print('left')
 
@@ -363,7 +363,7 @@ try:
             RGB_image = np.asanyarray(color_frame.get_data())
             depth_image = np.asanyarray(depth_frame.get_data())
 
-            flag_x, center_flag_x, center_flag_y, flag_w, RGB_image = M_flag.flag_detect(RGB_image)
+            flag_x, center_flag_x, center_flag_y, flag_w, RGB_image = flag.flag_detect(RGB_image)
 
             # 表示
             if center_flag_x != None:

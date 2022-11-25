@@ -1,8 +1,8 @@
 import os
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 import cv2
-import M_ball
-import M_bunker
+import ball
+import bunker
 
 class picamera():
 
@@ -51,8 +51,8 @@ class picamera():
         y3 = 490
         y4 = 510
 
-        self.bunker_x, self.bunker_y, self.bunker_w, self.bunker_h, self.bunker_frame = M_bunker.bunker_detect(ball_frame)
-        self.ball_left, self.ball_top, self.ball_center_x, self.ball_center_y, ball_frame = M_ball.ball_detect(ball_frame)
+        self.bunker_x, self.bunker_y, self.bunker_w, self.bunker_h, self.bunker_frame = bunker.bunker_detect(ball_frame)
+        self.ball_left, self.ball_top, self.ball_center_x, self.ball_center_y, ball_frame = ball.ball_detect(ball_frame)
 
         if self.bunker_x != None:
             cv2.rectangle(ball_frame, (self.bunker_x, self.bunker_y), (self.bunker_x + self.bunker_w, self.bunker_y + self.bunker_h), (0, 255, 0), 2)

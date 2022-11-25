@@ -5,9 +5,9 @@ import cv2
 import RPi.GPIO as GPIO
 import pyrealsense2.pyrealsense2 as rs
 import time
-import M_ball
-import M_flag
-import M_bunker
+import ball
+import flag
+import bunker
 
 
 def move(duty):
@@ -146,10 +146,10 @@ try:
         if ball_1 == True:
             ret,ball_1_frame = cap.read()
 
-            bunker_x,bunker_y,bunker_w,bunker_h,bunker_frame = M_bunker.bunker_detect(ball_1_frame)
+            bunker_x,bunker_y,bunker_w,bunker_h,bunker_frame = bunker.bunker_detect(ball_1_frame)
             #print(bunker_x)
             
-            upper_left_1_x,upper_left_1_y,center_ball_1_x,center_ball_1_y,ball_1_frame = M_ball.ball_detect(ball_1_frame)
+            upper_left_1_x,upper_left_1_y,center_ball_1_x,center_ball_1_y,ball_1_frame = ball.ball_detect(ball_1_frame)
             
             #バンカー描画
             if bunker_x != None:

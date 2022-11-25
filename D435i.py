@@ -1,6 +1,6 @@
 import pyrealsense2.pyrealsense2 as rs
 import numpy as np
-import M_flag
+import flag
 
 class D435i():
 
@@ -47,7 +47,7 @@ class D435i():
         self.depth_image = np.asanyarray(self.depth_frame.get_data())
 
     def detect_flag(self):
-        self.flag_x, self.center_flag_x, self.center_flag_y, self.flag_w, self.flag_result = M_flag.flag_detect(self.RGB_image)
+        self.flag_x, self.center_flag_x, self.center_flag_y, self.flag_w, self.flag_result = flag.flag_detect(self.RGB_image)
         self.flag_distance = None
         if self.flag_x is not None:
             self.distance(self.center_flag_x, self.center_flag_y)
