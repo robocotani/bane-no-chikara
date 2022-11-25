@@ -198,14 +198,14 @@ align = rs.align(align_to)
 #---------------------------------------
 
 # club
-club_ = club.club()
-club_.now_pull_dis = HC_SR04.get_distance(club_.TRIG_PIN, club_.ECHO_PIN, num=5, temp=20)
-club_.sheer_down(30)
-time.sleep(1)
-club_.DC_motor.stop()
+# club_ = club.club()
+# club_.now_pull_dis = HC_SR04.get_distance(club_.TRIG_PIN, club_.ECHO_PIN, num=5, temp=20)
+# club_.sheer_down(30)
+# time.sleep(1)
+# club_.DC_motor.stop()
 
-club_.sheer_hold()
-club_.sheer_move(100, club_.duty)
+# club_.sheer_hold()
+# club_.sheer_move(100, club_.duty)
 
 try:
     while True:
@@ -214,8 +214,8 @@ try:
         
         if k==ord('q'):#qで終了
             cv2.destroyAllWindows()
-            club_.sheer_release()
-            club_.end()
+            # club_.sheer_release()
+            # club_.end()
             GPIO.cleanup()
             pipeline.stop()
             break
@@ -370,65 +370,6 @@ try:
             stop()
             depth = False
             ball = True
-            # frames_depth = pipeline.wait_for_frames()
-
-            # #座標の補正
-            # aligned_frames = align.process(frames_depth)
-            # color_frame = aligned_frames.get_color_frame()
-            # depth_frame = aligned_frames.get_depth_frame()
-            # if not depth_frame or not color_frame:
-            #     continue
-
-            # RGB_image = np.asanyarray(color_frame.get_data())
-            # depth_image = np.asanyarray(depth_frame.get_data())
-
-
-            # upper_left_depth_x, upper_left_depth_y, center_ball_depth_x, center_ball_depth_y, frame_depth = M_ball.ball_detect(RGB_image)
-
-            # # 表示
-            # if center_ball_depth_x != None:
-            #     cv2.rectangle(RGB_image, (0, y2_depth), (1280, y4_depth), (0, 255, 0), 2)
-            #     cv2.rectangle(RGB_image, (x2_depth, 0), (x3_depth, 720), (0, 255, 0), 2)
-            #     cv2.imshow('depth', RGB_image)
-
-            # if upper_left_depth_x == None:
-            #     right_rotation(duty_ball_flag_None)
-            #     print("未検出")
-            # else:
-            #     if center_ball_depth_x < x1:
-            #         left_rotation_back(duty_middle)
-            #         print('left')
-
-            #     if x1 <= center_ball_depth_x and center_ball_depth_x < x2:
-            #         left_rotation_back(duty_middle)
-            #         print('left')
-
-            #     if x3 < center_ball_depth_x and center_ball_depth_x <= x4:
-            #         if y3 <= upper_left_depth_y:
-            #             right_rotation_back(duty_middle)
-            #             print('right')
-
-            #     if x4 < center_ball_depth_x:
-            #         right_rotation_back(duty_middle)
-            #         print('right')
-                
-
-            #     if x2 <= center_ball_depth_x and center_ball_depth_x <= x3:
-            #         if upper_left_depth_y < y1:
-            #             move(duty_fast)
-            #             print('move fast')
-            #         else:
-            #             move(duty_slow)
-            #             print('move')
-
-            #     if x2 <= center_ball_depth_x and center_ball_depth_x <= x3:
-            #         if y2 <= upper_left_depth_y and upper_left_depth_y <= y4:
-            #             stop()
-            #             print('stop')
-            #             depth = False
-            #             ball = True
-            #             cv2.destroyWindow('depth')
-            #             time.sleep(0.1)
 #------------------------------------------------------
 
 
@@ -512,16 +453,16 @@ try:
                 stop()
 
             print("打球")
-            club_.sheer_move(power, club_.duty)
-            time.sleep(0.5)
-            club_.sheer_release()
+            # club_.sheer_move(power, club_.duty)
+            # time.sleep(0.5)
+            # club_.sheer_release()
 
             stop()
 
             time.sleep(3)
 
-            club_.sheer_hold()
-            club_.sheer_move(80, club_.duty)
+            # club_.sheer_hold()
+            # club_.sheer_move(80, club_.duty)
 
             hole = False
             flag = False
@@ -534,7 +475,7 @@ except KeyboardInterrupt:
     # ストリーミング停止
     pipeline.stop()
     cv2.destroyAllWindows()
-    club_.sheer_release()
-    club_.end()
+    # club_.sheer_release()
+    # club_.end()
     GPIO.cleanup()
     cap.release()
