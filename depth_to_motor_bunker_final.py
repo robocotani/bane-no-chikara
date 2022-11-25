@@ -8,6 +8,7 @@ import time
 import M_ball
 import M_flag
 import M_bunker
+import move
 import club
 import HC_SR04
 
@@ -36,91 +37,7 @@ def distance(center_x,center_y):
     return dist_mean
 
 
-def move(duty):
-    #前進
-    p1.ChangeDutyCycle(duty)
-    p2.ChangeDutyCycle(0)
-    p3.ChangeDutyCycle(0)
-    p4.ChangeDutyCycle(duty)
-    
-
-
-def down(duty):
-    #後退
-    p1.ChangeDutyCycle(0)
-    p2.ChangeDutyCycle(duty)
-    p3.ChangeDutyCycle(duty)
-    p4.ChangeDutyCycle(0)
-
-
-
-def right_rotation_back(duty):
-    #前進(後ずさり)
-    p1.ChangeDutyCycle(0)
-    p2.ChangeDutyCycle(duty)
-    p3.ChangeDutyCycle(0)
-    p4.ChangeDutyCycle(0)
-
-
-def right_rotation(duty):
-    #前進
-    p1.ChangeDutyCycle(0)
-    p2.ChangeDutyCycle(duty)
-    p3.ChangeDutyCycle(0)
-    p4.ChangeDutyCycle(duty)
-    
-    
-
-def left_rotation_back(duty):
-    #左(後ずさり)
-    p1.ChangeDutyCycle(0)
-    p2.ChangeDutyCycle(0)
-    p3.ChangeDutyCycle(duty)
-    p4.ChangeDutyCycle(0)
-
-
-def left_rotation(duty):
-    #左
-    p1.ChangeDutyCycle(duty)
-    p2.ChangeDutyCycle(0)
-    p3.ChangeDutyCycle(duty)
-    p4.ChangeDutyCycle(0)
-    
-
-def stop():
-    #停止
-    p1.ChangeDutyCycle(0)
-    p2.ChangeDutyCycle(0)
-    p3.ChangeDutyCycle(0)
-    p4.ChangeDutyCycle(0)
-    
-GPIO.cleanup()
-
-#GPIO初期設定------------
-GPIO.setmode(GPIO.BCM)
-
-PIN1 = 6
-PIN2 = 13
-PIN3 = 5
-PIN4 = 0
-    
-
-GPIO.setup(PIN1, GPIO.OUT)
-GPIO.setup(PIN2, GPIO.OUT)
-GPIO.setup(PIN3, GPIO.OUT)
-GPIO.setup(PIN4, GPIO.OUT)
-
-#左
-p1 = GPIO.PWM(PIN1, 50) #50Hz
-p2 = GPIO.PWM(PIN2, 50) #50Hz
-#右
-p3 = GPIO.PWM(PIN3, 50) #50Hz
-p4 = GPIO.PWM(PIN4, 50) #50Hz
-            
-p1.start(0) 
-p2.start(0) 
-p3.start(0) 
-p4.start(0) 
+move_ = move.move()
 
 #------------------------
 
@@ -257,14 +174,14 @@ try:
                         if bunker_min < 30 and bunker_MAX >= int(size_w * bunker_percent):#画面の65％
                             #画面いっぱい
                             if bunker_y + bunker_h > bunker_down:
-                                down(duty_bunker)#duty=40
+                                move_.back(duty_bunker)#duty=40
                                 time.sleep(1)
-                                stop()
+                                move_.stop()
                             #フラッグが右なら左回転　2
                             #フラッグが左なら右回転　1
-                            right_rotation(duty_bunker)
+                            move_.right_rotation(duty_bunker)
                             time.sleep(3.5)
-                            move(duty_bunker)
+                            move_.forward(duty_bunker)
                             time.sleep(3)
                             bunker_rotation = 1
 
@@ -274,13 +191,13 @@ try:
 
                         if bunker_min < 30 and bunker_MAX < int(size_w * bunker_percent):
                             if bunker_y + bunker_h > bunker_down:
-                                down(duty_bunker)
+                                move_.back(duty_bunker)
                                 time.sleep(1)
-                                stop()
+                                move_.stop()
                             #画面の左側
-                            right_rotation(duty_bunker)
+                            move_.right_rotation(duty_bunker)
                             time.sleep(3)
-                            move(duty_bunker)
+                            move_.forward(duty_bunker)
                             time.sleep(3)
                             print('bunker right')
                             ritation = 1
@@ -288,14 +205,14 @@ try:
 
                         if 0 != bunker_min and int(size_w * bunker_percent) < bunker_MAX:
                             if bunker_y + bunker_h > bunker_down:
-                                down(duty_bunker)
+                                move_.back(duty_bunker)
                                 time.sleep(1)
-                                stop()
+                                move_.stop()
                             #画面の右側
                             print('bunker left')
-                            left_rotation(duty_bunker)
+                            move_.left_rotation(duty_bunker)
                             time.sleep(3)
-                            move(duty_bunker)
+                            move_.forward(duty_bunker)
                             time.sleep(3)
                             bunker_rotation = 2
 
@@ -308,49 +225,49 @@ try:
                 print("未検出")
             else:
                 if center_ball_1_x < x1 and upper_left_1_y < y1:
-                    left_rotation_back(duty_middle)
+                    move_.left_rotation_back(duty_middle)
                     print('left')
 
                 if x1 <= center_ball_1_x and center_ball_1_x < x2:
                     if y3 <= upper_left_1_y:
-                        down(duty_fast)
+                        move_.back(duty_fast)
                         print('down')
                     else:
-                        left_rotation_back(duty_middle)
+                        move_.left_rotation_back(duty_middle)
                         print('left')
 
                 if x3 < center_ball_1_x and center_ball_1_x <= x4:
                     if y3 <= upper_left_1_y:
-                        down(duty_fast)
+                        move_.back(duty_fast)
                         print('down')
                     else:
-                        right_rotation_back(duty_middle)
+                        move_.right_rotation_back(duty_middle)
                         print('right')
 
                 if x4 < center_ball_1_x and upper_left_1_y < y1:
-                    right_rotation_back(duty_middle)
+                    move_.right_rotation_back(duty_middle)
                     print('right')
                 
 
                 if x2 <= center_ball_1_x and center_ball_1_x <= x3:
                     if upper_left_1_y < y1:
-                        move(duty_fast)
+                        move_.forward(duty_fast)
                         print('move fast')
                     else:
-                        move(duty_slow)
+                        move_.forward(duty_slow)
                         print('move')
 
                 if x4 < center_ball_1_x and y1 <= upper_left_1_y:
-                    down(duty_fast)
+                    move_.back(duty_fast)
                     print('down')
 
                 if center_ball_1_x < x1 and y1 <= upper_left_1_y:
-                    down(duty_fast)  
+                    move_.back(duty_fast)  
                     print('down')
 
                 if x2 <= center_ball_1_x and center_ball_1_x <= x3:
                     if y2 <= upper_left_1_y and upper_left_1_y <= y4:
-                        stop()
+                        move_.stop()
                         print('stop')
                         ball = False
                         flag = True
@@ -365,9 +282,9 @@ try:
 #デプスカメラ
         if depth == True:
 
-            move(duty_fast)
+            move_.forward(duty_fast)
             time.sleep(2)
-            stop()
+            move_.stop()
             depth = False
             ball = True
 #------------------------------------------------------
@@ -404,19 +321,19 @@ try:
 
             if flag_x == None:
                 #フラッグ未検出
-                right_rotation(duty_ball_flag_None)
+                move_.right_rotation(duty_ball_flag_None)
                 print("未検出")
             else:
                 if flag_x < x2_f:
-                    left_rotation(duty_slow)
+                    move_.left_rotation(duty_slow)
                     print('left flag slow')
                 if x3_f < flag_x:
-                    right_rotation(duty_slow) 
+                    move_.right_rotation(duty_slow) 
                     print('right slow')
                 if x2_f <= flag_x and flag_x <= x3_f:
                 #停止
                     print('stop flag')
-                    stop()
+                    move_.stop()
 
                     dist_depth = distance(center_flag_x, center_flag_y)
                     if dist_depth == None:
@@ -448,16 +365,16 @@ try:
                 # power = 80
             if dist_depth <= 0.8:
                 power = 65
-                down(duty_fast)
+                move_.back(duty_fast)
                 time.sleep(0.5)
-                stop()
+                move_.stop()
 
             print("打球")
             # club_.sheer_move(power, club_.duty)
             # time.sleep(0.5)
             # club_.sheer_release()
 
-            stop()
+            move_.stop()
 
             time.sleep(3)
 
