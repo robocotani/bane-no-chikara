@@ -1,22 +1,15 @@
-import os
-os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
-import numpy as np
 import cv2
 import RPi.GPIO as GPIO
 import D435i
+import picamera
 import time
-import M_ball
-import M_bunker
 import move
-import club
-import HC_SR04
-
-
-
-
+# import club
+# import HC_SR04
 
 move_ = move.move()
 realsense = D435i.D435i()
+pi_camera = picamera.picamera()
 
 #------------------------
 
@@ -63,23 +56,6 @@ duty_fast = 30
 duty_bunker = 30
 duty_ball_flag_None = 50
 
-#バンカー避け設定
-bunker_lim = 300
-bunker_down = 400
-bunker_percent = 0.65
-bunker_rotation = 100
-
-
-#カメラ設定----------------------------
-cap = cv2.VideoCapture(6)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, size_w)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, size_h)
-#--------------------------------------
-
-
-
-
-
 # club
 # club_ = club.club()
 # club_.now_pull_dis = HC_SR04.get_distance(club_.TRIG_PIN, club_.ECHO_PIN, num=5, temp=20)
@@ -107,39 +83,26 @@ try:
 
         if ball == True:
 
-            ret, frame_ball_1 = cap.read()
-
-            bunker_x, bunker_y, bunker_w, bunker_h, bunker_frame = M_bunker.bunker_detect(frame_ball_1)
+            ball_frame = pi_camera.get_frame()
+            ball_frame = pi_camera.detect_ball_banker()
             
+            cv2.imshow('ball_bunker', ball_frame)
 
-            upper_left_1_x, upper_left_1_y, center_ball_1_x, center_ball_1_y, frame_ball_1 = M_ball.ball_detect(frame_ball_1)
-
-
-            if bunker_x != None:
-                cv2.rectangle(frame_ball_1, (bunker_x, bunker_y), (bunker_x + bunker_w, bunker_y + bunker_h), (0, 255, 0), 2)
-            cv2.line(frame_ball_1, (0, bunker_lim), (size_w, bunker_lim), (0, 255, 0), thickness=2, lineType=cv2.LINE_4)
-            cv2.line(frame_ball_1, (int(size_w * bunker_percent), 0), (int(size_w * bunker_percent), size_h), (0, 255, 0), thickness=2, lineType=cv2.LINE_4)
-            #ボール検出範囲描画
-            cv2.rectangle(frame_ball_1, (x2, 0), (x3, size_h), (0, 255, 0), 2)
-            cv2.rectangle(frame_ball_1, (x1, 0), (x4, size_h), (0, 255, 0), 2)
-            cv2.rectangle(frame_ball_1, (0, y2), (size_w, y4), (0, 255, 0), 2)
-            cv2.imshow('ball_bunker', frame_ball_1)
-
-            if bunker_x != None:
+            if pi_camera.bunker_x != None:
                 #バンカー回避
-                if bunker_y + bunker_h > bunker_lim and center_ball_1_y != None:
+                if pi_camera.bunker_y + pi_camera.bunker_h > pi_camera.bunker_lim and pi_camera.ball_center_y != None:
 
                     print("=== bunker move ===")
 
-                    if center_ball_1_y==None or upper_left_1_y + ((center_ball_1_y - upper_left_1_y)*2) < bunker_y+bunker_h:
+                    if pi_camera.ball_center_y==None or pi_camera.ball_top + ((pi_camera.ball_center_y - pi_camera.ball_top)*2) < pi_camera.bunker_y+pi_camera.bunker_h:
 
-                        bunker_MAX = bunker_x + bunker_w
-                        bunker_min = bunker_x
+                        bunker_MAX = pi_camera.bunker_x + pi_camera.bunker_w
+                        bunker_min = pi_camera.bunker_x
                         # print(bunker_min)
 
-                        if bunker_min < 30 and bunker_MAX >= int(size_w * bunker_percent):#画面の65％
+                        if bunker_min < 30 and bunker_MAX >= int(size_w * pi_camera.bunker_percent):#画面の65％
                             #画面いっぱい
-                            if bunker_y + bunker_h > bunker_down:
+                            if pi_camera.bunker_y + pi_camera.bunker_h > pi_camera.bunker_down:
                                 move_.back(duty_bunker)#duty=40
                                 time.sleep(1)
                                 move_.stop()
@@ -155,8 +118,8 @@ try:
 
 
 
-                        if bunker_min < 30 and bunker_MAX < int(size_w * bunker_percent):
-                            if bunker_y + bunker_h > bunker_down:
+                        if bunker_min < 30 and bunker_MAX < int(size_w * pi_camera.bunker_percent):
+                            if pi_camera.bunker_y + pi_camera.bunker_h > pi_camera.bunker_down:
                                 move_.back(duty_bunker)
                                 time.sleep(1)
                                 move_.stop()
@@ -169,8 +132,8 @@ try:
                             ritation = 1
 
 
-                        if 0 != bunker_min and int(size_w * bunker_percent) < bunker_MAX:
-                            if bunker_y + bunker_h > bunker_down:
+                        if 0 != bunker_min and int(size_w * pi_camera.bunker_percent) < bunker_MAX:
+                            if pi_camera.bunker_y + pi_camera.bunker_h > pi_camera.bunker_down:
                                 move_.back(duty_bunker)
                                 time.sleep(1)
                                 move_.stop()
@@ -184,55 +147,55 @@ try:
 
             print("=== ball move ===")
 
-            if upper_left_1_x == None:
+            if pi_camera.ball_left == None:
                 #right_rotation(duty_ball_flag_None)
                 depth = True
                 ball = False
                 print("未検出")
             else:
-                if center_ball_1_x < x1 and upper_left_1_y < y1:
+                if pi_camera.ball_center_x < x1 and pi_camera.ball_top < y1:
                     move_.left_rotation_back(duty_middle)
                     print('left')
 
-                if x1 <= center_ball_1_x and center_ball_1_x < x2:
-                    if y3 <= upper_left_1_y:
+                if x1 <= pi_camera.ball_center_x and pi_camera.ball_center_x < x2:
+                    if y3 <= pi_camera.ball_top:
                         move_.back(duty_fast)
                         print('down')
                     else:
                         move_.left_rotation_back(duty_middle)
                         print('left')
 
-                if x3 < center_ball_1_x and center_ball_1_x <= x4:
-                    if y3 <= upper_left_1_y:
+                if x3 < pi_camera.ball_center_x and pi_camera.ball_center_x <= x4:
+                    if y3 <= pi_camera.ball_top:
                         move_.back(duty_fast)
                         print('down')
                     else:
                         move_.right_rotation_back(duty_middle)
                         print('right')
 
-                if x4 < center_ball_1_x and upper_left_1_y < y1:
+                if x4 < pi_camera.ball_center_x and pi_camera.ball_top < y1:
                     move_.right_rotation_back(duty_middle)
                     print('right')
                 
 
-                if x2 <= center_ball_1_x and center_ball_1_x <= x3:
-                    if upper_left_1_y < y1:
+                if x2 <= pi_camera.ball_center_x and pi_camera.ball_center_x <= x3:
+                    if pi_camera.ball_top < y1:
                         move_.forward(duty_fast)
                         print('move fast')
                     else:
                         move_.forward(duty_slow)
                         print('move')
 
-                if x4 < center_ball_1_x and y1 <= upper_left_1_y:
+                if x4 < pi_camera.ball_center_x and y1 <= pi_camera.ball_top:
                     move_.back(duty_fast)
                     print('down')
 
-                if center_ball_1_x < x1 and y1 <= upper_left_1_y:
+                if pi_camera.ball_center_x < x1 and y1 <= pi_camera.ball_top:
                     move_.back(duty_fast)  
                     print('down')
 
-                if x2 <= center_ball_1_x and center_ball_1_x <= x3:
-                    if y2 <= upper_left_1_y and upper_left_1_y <= y4:
+                if x2 <= pi_camera.ball_center_x and pi_camera.ball_center_x <= x3:
+                    if y2 <= pi_camera.ball_top and pi_camera.ball_top <= y4:
                         move_.stop()
                         print('stop')
                         ball = False
@@ -242,7 +205,7 @@ try:
 
             #カメラ処理遅れ対策
             for i in range(5):
-                cap.read()
+                pi_camera.get_frame()
 #------------------------------------------------
 
 #デプスカメラ
@@ -351,4 +314,4 @@ except KeyboardInterrupt:
     # club_.sheer_release()
     # club_.end()
     GPIO.cleanup()
-    cap.release()
+    pi_camera.end()
