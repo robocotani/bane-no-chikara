@@ -1,6 +1,5 @@
 import cv2
 import time
-
 import D435i
 import picamera
 import move
