@@ -82,11 +82,6 @@ if __name__ == "__main__":
 
         while True:
 
-            # motor1.rotate("CW", 80)
-            # time.sleep(1)
-            # motor1.rotate("CCW", 80)
-            # time.sleep(1)
-
             oder = input("")
 
             if oder=="":

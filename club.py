@@ -1,14 +1,16 @@
+import time
 import HC_SR04
 import L298N
 import MG996R
-import time
-import RPi.GPIO as GPIO
+
 
 class club():
 
-    hold = False
+    # ホールド位置
+    hold_dis = 28
 
-    hold_dis = 25
+    # 許容誤差
+    pull_dis_target_range = 1   # [mm]
 
     # HC_SR04
     TRIG_PIN = 15
@@ -18,21 +20,20 @@ class club():
     IN3_PIN = 10
     IN4_PIN = 9
     FREQ = 50
-    duty = 30
+    duty = 60
 
     # MG996R
     SIG_PIN = 24
     hold_angle = 0
     release_angle = -25
+    sleep_for_servo = 0.5   # [s]
 
-    pull_dis_target_range = 1   # [mm]
-
+    hold = False
     DC_motor = None
     servo = None
 
+    # 初期化
     def __init__(self, duty=60):
-
-        # GPIO.cleanup()
 
         self.duty = duty
 
@@ -40,10 +41,6 @@ class club():
         
         self.servo = MG996R.MG996R(self.SIG_PIN)
         self.servo.update_angle(0)
-
-        # self.DC_motor.rotate("CW", 30)
-        # time.sleep(1)
-        # self.DC_motor.stop()
 
     def shot(self, target_shot_dis):
         target_pull_dis = target_shot_dis / 20
@@ -55,6 +52,7 @@ class club():
         self.sheer_move(target_pull_dis, self.duty)
         self.sheer_release()
 
+    # ホールド (最下端へ移動+ホールド)
     def sheer_hold(self):
         if self.hold == False:
             self.sheer_move(100, self.duty)
@@ -63,43 +61,39 @@ class club():
             self.sheer_move(self.hold_dis, self.duty)
             self.servo.update_angle(self.hold_angle)
             self.hold = True
-            time.sleep(1)
+            time.sleep(self.sleep_for_servo)
 
+    # リリース
     def sheer_release(self):
         self.servo.update_angle(self.release_angle)
         self.hold = False
 
+    # シアー移動
     def sheer_move(self, target_pull_dis, duty):
 
         while True:
 
             self.now_pull_dis = HC_SR04.get_distance(self.TRIG_PIN, self.ECHO_PIN, num=5, temp=20)
-            if self.now_pull_dis == -1:
-                DC_motor.stop()
+            print("\rsheer distance = " + str(self.now_pull_dis) + " [mm]  ", end="")
 
-            # print(self.now_pull_dis)
+            if self.now_pull_dis == -1:
+                self.DC_motor.stop()
 
             if self.now_pull_dis <= target_pull_dis-self.pull_dis_target_range:
-                # print("if1")
                 self.sheer_up(duty)
             elif target_pull_dis+self.pull_dis_target_range <= self.now_pull_dis:
                 self.sheer_down(duty)
-                # print("if2")
             else:
-                # print("if3")
                 self.DC_motor.stop()
                 break
-            
-            # time.sleep(1)                
 
+        print("")
         return self.now_pull_dis
 
     def sheer_up(self, duty):
-        # print("up")
         self.DC_motor.rotate("CW", duty)
 
     def sheer_down(self, duty):
-        # print("down")
         self.DC_motor.rotate("CCW", duty)
 
     def sheer_stop(self):
@@ -107,35 +101,43 @@ class club():
 
     def end(self):
         self.servo.update_angle(self.hold_angle)
+        time.sleep(self.sleep_for_servo)
         self.DC_motor.end()
         self.servo.end()
 
 if __name__ == "__main__":
+
+    print("=== club.py ===")
+    print("[command]")
+    print(" ・move x (x is distance[mm])")
+    print(" ・hold")
+    print(" ・release")
+    print("end with Ctrl+C")
+    print("---------------")
     
     club_ = club()
 
-    # club_.DC_motor.rotate("CW", 30)
-    # time.sleep(1)
-    # club_.DC_motor.
-    # stop()
     club_.now_pull_dis = HC_SR04.get_distance(club_.TRIG_PIN, club_.ECHO_PIN, num=5, temp=20)
-
-    # club_.sheer_down(30)
-    # time.sleep(1)
-    # club_.DC_motor.stop()
-
 
     try:
         while True:
-            oder = input('"move" or "hold" or "release" : ')
+
+            command = input('command : ')
+            try:
+                oder, option = command.split()
+            except:
+                oder = command
+                option = None
+
             if oder=="move":
-                distance = float(input("pull distance"))
-                dis = club_.sheer_move(distance, club_.duty)
-                print(dis)
+                if option is None:
+                    option = input("distance:")
+                dis = club_.sheer_move(int(option), club_.duty)
             if oder=="hold":
                 club_.sheer_hold()
             if oder=="release":
                 club_.sheer_release()
 
-    except:
+    except KeyboardInterrupt:
         club_.end()
+        print("")
